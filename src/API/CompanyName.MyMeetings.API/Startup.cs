@@ -10,6 +10,7 @@ using CompanyName.MyMeetings.API.Modules.Payments;
 using CompanyName.MyMeetings.API.Modules.UserAccess;
 using CompanyName.MyMeetings.BuildingBlocks.Application;
 using CompanyName.MyMeetings.BuildingBlocks.Domain;
+using CompanyName.MyMeetings.BuildingBlocks.Infrastructure.Caching;
 using CompanyName.MyMeetings.BuildingBlocks.Infrastructure.Emails;
 using CompanyName.MyMeetings.Modules.Administration.Infrastructure.Configuration;
 using CompanyName.MyMeetings.Modules.Meetings.Infrastructure.Configuration;
@@ -60,6 +61,8 @@ namespace CompanyName.MyMeetings.API
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IExecutionContextAccessor, ExecutionContextAccessor>();
+
+            ConfigureCacheServices(services);
 
             services.AddProblemDetails(x =>
             {
@@ -182,6 +185,27 @@ namespace CompanyName.MyMeetings.API
                 _configuration["Security:TextEncryptionKey"],
                 null,
                 null);
+        }
+
+        private void ConfigureCacheServices(IServiceCollection services)
+        {
+            var cacheConfig = _configuration.GetSection("CacheConfiguration").Get<CacheConfiguration>();
+
+            if (cacheConfig?.CacheType?.Equals("Redis", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = cacheConfig.RedisConnectionString;
+                });
+                services.AddSingleton<ICacheService, RedisCacheService>();
+                _loggerForApi.Information("Using Redis cache");
+            }
+            else
+            {
+                services.AddMemoryCache();
+                services.AddSingleton<ICacheService, InMemoryCacheService>();
+                _loggerForApi.Information("Using InMemory cache");
+            }
         }
     }
 }
