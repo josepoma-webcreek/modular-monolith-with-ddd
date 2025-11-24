@@ -77,6 +77,10 @@ namespace CompanyName.MyMeetings.API
             });
 
             services.AddScoped<IAuthorizationHandler, HasPermissionAuthorizationHandler>();
+
+            // SignalR configuration
+            services.AddSignalR();
+            services.AddSingleton<SignalR.ISignalRConnectionManager, SignalR.InMemorySignalRConnectionManager>();
         }
 
         public void ConfigureContainer(ContainerBuilder containerBuilder)
@@ -120,7 +124,11 @@ namespace CompanyName.MyMeetings.API
             // app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<SignalR.MyMeetingsHub>("/hubs/myMeetings");
+            });
         }
 
         private static void ConfigureLogger()
