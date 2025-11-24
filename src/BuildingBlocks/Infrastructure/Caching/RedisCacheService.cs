@@ -8,6 +8,11 @@ namespace CompanyName.MyMeetings.BuildingBlocks.Infrastructure.Caching
     public class RedisCacheService : ICacheService
     {
         private readonly IDistributedCache _distributedCache;
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = false
+        };
 
         public RedisCacheService(IDistributedCache distributedCache)
         {
@@ -22,12 +27,12 @@ namespace CompanyName.MyMeetings.BuildingBlocks.Infrastructure.Caching
                 return default;
             }
 
-            return JsonSerializer.Deserialize<T>(cachedValue);
+            return JsonSerializer.Deserialize<T>(cachedValue, _jsonOptions);
         }
 
         public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
         {
-            var serializedValue = JsonSerializer.Serialize(value);
+            var serializedValue = JsonSerializer.Serialize(value, _jsonOptions);
             var options = new DistributedCacheEntryOptions();
 
             if (expiration.HasValue)

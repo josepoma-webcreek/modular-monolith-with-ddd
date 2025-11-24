@@ -31,6 +31,7 @@ namespace CompanyName.MyMeetings.API
     public class Startup
     {
         private const string MeetingsConnectionString = "MeetingsConnectionString";
+        private const string RedisCacheType = "Redis";
         private static ILogger _logger;
         private static ILogger _loggerForApi;
         private readonly IConfiguration _configuration;
@@ -191,7 +192,7 @@ namespace CompanyName.MyMeetings.API
         {
             var cacheConfig = _configuration.GetSection("CacheConfiguration").Get<CacheConfiguration>();
 
-            if (cacheConfig?.CacheType?.Equals("Redis", StringComparison.OrdinalIgnoreCase) == true)
+            if (cacheConfig?.CacheType?.Equals(RedisCacheType, StringComparison.OrdinalIgnoreCase) == true)
             {
                 services.AddStackExchangeRedisCache(options =>
                 {

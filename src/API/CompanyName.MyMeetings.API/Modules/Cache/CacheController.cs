@@ -7,6 +7,9 @@ namespace CompanyName.MyMeetings.API.Modules.Cache
     [ApiController]
     public class CacheController : ControllerBase
     {
+        private const string RedisCacheType = "Redis";
+        private const string InMemoryCacheType = "InMemory";
+
         private readonly ICacheService _cacheService;
 
         public CacheController(ICacheService cacheService)
@@ -116,7 +119,7 @@ namespace CompanyName.MyMeetings.API.Modules.Cache
         public async Task<IActionResult> TestCache([FromBody] TestCacheRequest request)
         {
             var testKey = $"test_{Guid.NewGuid()}";
-            var testValue = request.Value ?? "Test Value";
+            var testValue = string.IsNullOrEmpty(request.Value) ? "Test Value" : request.Value;
 
             // Set the value
             await _cacheService.SetAsync(testKey, testValue, TimeSpan.FromMinutes(5));
@@ -148,52 +151,52 @@ namespace CompanyName.MyMeetings.API.Modules.Cache
 
     public class CacheInfoResponse
     {
-        public string CacheType { get; set; }
+        public string CacheType { get; set; } = string.Empty;
 
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 
     public class SetCacheRequest
     {
-        public string Key { get; set; }
+        public string Key { get; set; } = string.Empty;
 
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
 
         public int? ExpirationSeconds { get; set; }
     }
 
     public class GetCacheResponse
     {
-        public string Key { get; set; }
+        public string Key { get; set; } = string.Empty;
 
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
 
-        public string CacheType { get; set; }
+        public string CacheType { get; set; } = string.Empty;
     }
 
     public class ExistsCacheResponse
     {
-        public string Key { get; set; }
+        public string Key { get; set; } = string.Empty;
 
         public bool Exists { get; set; }
 
-        public string CacheType { get; set; }
+        public string CacheType { get; set; } = string.Empty;
     }
 
     public class TestCacheRequest
     {
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
     }
 
     public class TestCacheResponse
     {
-        public string CacheType { get; set; }
+        public string CacheType { get; set; } = string.Empty;
 
-        public string TestKey { get; set; }
+        public string TestKey { get; set; } = string.Empty;
 
-        public string OriginalValue { get; set; }
+        public string OriginalValue { get; set; } = string.Empty;
 
-        public string RetrievedValue { get; set; }
+        public string RetrievedValue { get; set; } = string.Empty;
 
         public bool ExistedBeforeDelete { get; set; }
 
