@@ -74,7 +74,7 @@ namespace CompanyName.MyMeetings.API.SignalR
         [ProducesResponseType(typeof(IEnumerable<SignalRConnectionDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetMyConnections()
         {
-            var userId = User?.Identity?.Name;
+            var userId = UserIdentityHelper.GetUserId(User);
 
             if (string.IsNullOrEmpty(userId))
             {

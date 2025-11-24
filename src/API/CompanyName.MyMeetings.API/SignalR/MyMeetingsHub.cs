@@ -20,7 +20,7 @@ namespace CompanyName.MyMeetings.API.SignalR
 
         public override async Task OnConnectedAsync()
         {
-            var userId = Context.User?.Identity?.Name;
+            var userId = UserIdentityHelper.GetUserId(Context.User);
             var connectionId = Context.ConnectionId;
 
             _logger.LogInformation(
@@ -38,7 +38,7 @@ namespace CompanyName.MyMeetings.API.SignalR
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var userId = Context.User?.Identity?.Name;
+            var userId = UserIdentityHelper.GetUserId(Context.User);
             var connectionId = Context.ConnectionId;
 
             _logger.LogInformation(
@@ -62,7 +62,7 @@ namespace CompanyName.MyMeetings.API.SignalR
         /// <returns>A task representing the async operation.</returns>
         public async Task RegisterConnection(string module, string additionalData = null)
         {
-            var userId = Context.User?.Identity?.Name;
+            var userId = UserIdentityHelper.GetUserId(Context.User);
             var connectionId = Context.ConnectionId;
 
             _logger.LogInformation(
