@@ -141,3 +141,16 @@ The system automatically tracks:
 - Redis backplane for scale-out scenarios
 - Message queuing for offline users
 - Connection analytics and monitoring dashboards
+
+## Testing
+
+A simple HTML/JavaScript test client is provided in `test-client.html`. To use it:
+
+1. Start the API application
+2. Open `test-client.html` in a web browser
+3. Update the API URL if needed
+4. Click "Connect" to establish a SignalR connection
+5. Use "Register Connection" to register the connection with module metadata
+6. Monitor the connection log for events
+
+Note: Ensure CORS is properly configured in your API to allow connections from your test client origin.

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        button { margin: 5px; padding: 10px 20px; cursor: pointer; }
+        #log { background-color: #f5f5f5; padding: 10px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        input { padding: 5px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SignalR Connection Test</h1>
+        
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div>
+            <label>API URL:</label>
+            <input type="text" id="apiUrl" value="https://localhost:5001" style="width: 300px;" />
+        </div>
+        
+        <div>
+            <label>Auth Token (optional):</label>
+            <input type="text" id="authToken" placeholder="Bearer token" style="width: 300px;" />
+        </div>
+        
+        <div>
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+            <button onclick="registerConnection()">Register Connection</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div>
+            <label>Module:</label>
+            <input type="text" id="module" value="Meetings" />
+            <label>Additional Data:</label>
+            <input type="text" id="additionalData" placeholder='{"key":"value"}' />
+        </div>
+        
+        <h3>Connection Log:</h3>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let connection = null;
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = 'Connected - Connection ID: ' + connection.connectionId;
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = 'Disconnected';
+            }
+        }
+
+        async function connect() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const authToken = document.getElementById('authToken').value;
+            
+            const hubUrl = `${apiUrl}/hubs/myMeetings`;
+            
+            log('Connecting to: ' + hubUrl);
+            
+            const options = {
+                withCredentials: false
+            };
+            
+            if (authToken) {
+                options.accessTokenFactory = () => authToken;
+                log('Using authentication token');
+            }
+            
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl, options)
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+            
+            // Setup event handlers
+            connection.on("ConnectionRegistered", (data) => {
+                log('Connection registered: ' + JSON.stringify(data));
+            });
+            
+            connection.onclose((error) => {
+                updateStatus(false);
+                log('Connection closed: ' + (error ? error.message : 'No error'));
+            });
+            
+            connection.onreconnecting((error) => {
+                log('Reconnecting: ' + (error ? error.message : 'No error'));
+            });
+            
+            connection.onreconnected((connectionId) => {
+                log('Reconnected with connection ID: ' + connectionId);
+                updateStatus(true);
+            });
+            
+            try {
+                await connection.start();
+                log('Connected successfully!');
+                updateStatus(true);
+            } catch (err) {
+                log('Error connecting: ' + err.message);
+                updateStatus(false);
+            }
+        }
+
+        async function disconnect() {
+            if (connection) {
+                try {
+                    await connection.stop();
+                    log('Disconnected');
+                    updateStatus(false);
+                } catch (err) {
+                    log('Error disconnecting: ' + err.message);
+                }
+            } else {
+                log('Not connected');
+            }
+        }
+
+        async function registerConnection() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                log('Not connected to hub');
+                return;
+            }
+            
+            const module = document.getElementById('module').value;
+            const additionalData = document.getElementById('additionalData').value;
+            
+            try {
+                log(`Registering connection for module: ${module}`);
+                await connection.invoke("RegisterConnection", module, additionalData);
+                log('Registration request sent');
+            } catch (err) {
+                log('Error registering connection: ' + err.message);
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Log when page loads
+        log('SignalR test client loaded');
+        log('Make sure your API is running and CORS is configured properly');
+    </script>
+</body>
+</html>
